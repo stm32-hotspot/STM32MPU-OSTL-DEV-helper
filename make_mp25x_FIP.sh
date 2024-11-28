@@ -245,7 +245,7 @@ for storage in ${STORAGE_DEVICEs}; do
 done
 cp -v ${FIP_DEPLOYDIR_ROOT}/arm-trusted-firmware/tf-a-${CUSTOM_DTS_NAME}-${OPTEE_TYPE}-programmer-${PRG_BUS}.stm32 ${SDK_HELPER_OUTPUT_TFA}/tfa_${PRG_BUS}.stm32
 
-cp -rv STM32MPU_SDK_helper/FLASH_LAYOUT        ${SDK_HELPER_OUTPUT}/
+cp -rv STM32MPU-OSTL-DEV-helper/FLASH_LAYOUT        ${SDK_HELPER_OUTPUT}/
 mv ${SDK_HELPER_OUTPUT}/FLASH_LAYOUT/flash.sh  ${SDK_HELPER_OUTPUT}/
 mv ${SDK_HELPER_OUTPUT}/FLASH_LAYOUT/flash.bat ${SDK_HELPER_OUTPUT}/
 
