@@ -1,0 +1,4 @@
+#Opt	Id	Name		Type		IP	Offset		Binary
+P	0x10	kernel		System		ram0	0x8A000000	kernel/Image.gz-stm32mp25-myboard.bin
+P	0x11	dtb		FileSystem	ram0	0x90000000	kernel/stm32mp257f-myboard.dtb
+P	0x12	initrd		Binary		ram0	0x90400000	myimage-openstlinux-weston-stm32mp25-myboard.rootfs.cpio.gz
