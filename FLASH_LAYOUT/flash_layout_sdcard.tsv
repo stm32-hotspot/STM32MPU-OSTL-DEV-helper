@@ -8,8 +8,8 @@ PE	0x06	metadata1	FWU_MDATA	mmc0	0x00084400	tfa/metadata.bin
 PE	0x07	metadata2	FWU_MDATA	mmc0	0x000C4400	tfa/metadata.bin
 P	0x08	fip-a		FIP		mmc0	0x00104400	fip/fip.bin
 PED	0x09	fip-b		FIP		mmc0	0x00504400	fip/fip.bin
-PED	0x0A	u-boot-env	ENV		mmc1	0x00980000	none
-PE	0x10	bootfs		System		mmc1	0x00A00000	none
-PE	0x11	vendorfs	FileSystem	mmc1	0x04A00000	none
-PE	0x12	rootfs		FileSystem	mmc1	0x10100000	none
-PE	0x13	userfs		FileSystem	mmc1	0xD0100000	none
+PED	0x0A	u-boot-env	ENV		mmc1	0x00904400	none
+PE	0x10	bootfs		System		mmc1	0x00984400	none
+PE	0x11	vendorfs	FileSystem	mmc1	0x04984400	none
+PE	0x12	rootfs		FileSystem	mmc1	0x14984400	none
+PE	0x13	userfs		FileSystem	mmc1	0x114384400	none
