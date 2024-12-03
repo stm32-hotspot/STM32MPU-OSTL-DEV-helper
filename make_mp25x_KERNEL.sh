@@ -35,21 +35,24 @@ cd ${LINUX_DIR}/linux-${linux_ver}
 export K_BUILD_DIR="../build/"
 mkdir -p ${K_BUILD_DIR}
 
+make O=${K_BUILD_DIR} defconfig fragment*.config
 
 if [ "x${MINIMAL_DEFCONFIG}" = "x0" ]; then
-  make O=${K_BUILD_DIR} defconfig fragment*.config
-  for frag in ${FRAGMENT_LIST}; do
-    ./scripts/kconfig/merge_config.sh -m -r -O ${K_BUILD_DIR} ${K_BUILD_DIR}/.config ../${frag}
-  done
+  echo
+#  for frag in ${FRAGMENT_LIST}; do
+#    ./scripts/kconfig/merge_config.sh -m -r -O ${K_BUILD_DIR} ${K_BUILD_DIR}/.config ../${frag}
+#  done
 else
-   make O=${K_BUILD_DIR} defconfig 
    ./scripts/kconfig/merge_config.sh -m -r -O ${K_BUILD_DIR} ${K_BUILD_DIR}/.config ../../STM32MPU-OSTL-DEV-helper/KERNEL/fragment_minimal.config
 fi
 
-# ./scripts/diffconfig -m ${K_BUILD_DIR}defconfig ../../STM32MPU-OSTL-DEV-helper/KERNEL/minimal_defconfig > ../../STM32MPU-OSTL-DEV-helper/KERNEL/fragment_minimal.config
+# ./scripts/diffconfig -m  ${K_BUILD_DIR}.config ${K_BUILD_DIR}defconfig_202411292314 > FFFFF_AA
 # exit 0
 
-# cp ../../STM32MPU-OSTL-DEV-helper/KERNEL/minimal_defconfig arch/arm64/configs/stm32mp2_minimal_defconfig
+# ./scripts/diffconfig -m ${K_BUILD_DIR}defconfig ../../STM32MPU_SDK_helper/KERNEL/minimal_defconfig > ../../STM32MPU_SDK_helper/KERNEL/fragment_minimal.config
+# exit 0
+
+# cp ../../STM32MPU_SDK_helper/KERNEL/minimal_defconfig arch/arm64/configs/stm32mp2_minimal_defconfig
 # make O=${K_BUILD_DIR} stm32mp2_minimal_defconfig
 
 # make O=${K_BUILD_DIR} menuconfig

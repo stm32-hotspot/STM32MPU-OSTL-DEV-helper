@@ -40,7 +40,8 @@ STORAGE_DEVICEs="emmc"
 ###########################################################################
 # OPTEE version: standard or min
 # Available options: "optee" - "opteemin"
-OPTEE_TYPE="opteemin"
+# OPTEE_TYPE="opteemin"
+OPTEE_TYPE="optee"
 
 ###########################################################################
 # Programming channel
@@ -244,6 +245,7 @@ for storage in ${STORAGE_DEVICEs}; do
 	cp -v ${FIP_DEPLOYDIR_ROOT}/fip/fip-${CUSTOM_DTS_NAME}-${OPTEE_TYPE}-${storage}.bin ${SDK_HELPER_OUTPUT_FIP}/fip.bin
 done
 cp -v ${FIP_DEPLOYDIR_ROOT}/arm-trusted-firmware/tf-a-${CUSTOM_DTS_NAME}-${OPTEE_TYPE}-programmer-${PRG_BUS}.stm32 ${SDK_HELPER_OUTPUT_TFA}/tfa_${PRG_BUS}.stm32
+cp -v ${FIP_DEPLOYDIR_ROOT}/fip/fip-${CUSTOM_DTS_NAME}-${OPTEE_TYPE}-programmer-${PRG_BUS}.bin ${SDK_HELPER_OUTPUT_FIP}/fip_${PRG_BUS}.bin
 
 cp -rv STM32MPU-OSTL-DEV-helper/FLASH_LAYOUT        ${SDK_HELPER_OUTPUT}/
 mv ${SDK_HELPER_OUTPUT}/FLASH_LAYOUT/flash.sh  ${SDK_HELPER_OUTPUT}/

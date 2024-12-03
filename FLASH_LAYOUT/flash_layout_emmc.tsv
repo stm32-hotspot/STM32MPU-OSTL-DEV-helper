@@ -1,7 +1,7 @@
 #Opt	Id	Name	Type	IP	Offset	Binary
 -	0x01	fsbl-boot	Binary		none	0x0		tfa/tfa_usb.stm32
 -	0x02	fip-ddr		FIP		none	0x0		fip/fip-ddr.bin
--	0x03	fip-boot	FIP		none	0x0		fip/fip.bin
+-	0x03	fip-boot	FIP		none	0x0		fip/fip_usb.bin
 P	0x04	fsbla1		Binary		mmc1	boot1		tfa/tfa_emmc.stm32
 P	0x05	fsbla2		Binary		mmc1	boot2		tfa/tfa_emmc.stm32
 PE	0x06	metadata1	FWU_MDATA	mmc1	0x00080000	tfa/metadata.bin
