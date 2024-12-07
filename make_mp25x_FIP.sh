@@ -61,9 +61,9 @@ BUILD_TFA="1"    # Build tfa + FIP
 BUILD_OPTEE="1"  # Build optee + FIP
 BUILD_UBOOT="1"  # Build uboot + FIP
 
-DO_CLEAN="0"     # Clean up the build folder & FIP_artifacts folder before build.
-DO_CLEAN_DTB="0" # Clean up all DTBs before build.
-DO_CLEAN_ALL="0" # Clean up FIP_artifacts folder.
+DO_CLEAN="1"     # Clean up the build folder & FIP_artifacts folder before build.
+DO_CLEAN_DTB="1" # Clean up all DTBs before build.
+DO_CLEAN_ALL="1" # Clean up FIP_artifacts folder.
 
 BUILD_HELPER_OUTPUT="1" # Copy final artifact in OUT folder and create tar.gz archive (under ./BUILD_OUTPUT) 
 
@@ -147,6 +147,7 @@ function do_build_uboot() {
   cd ${UBOOT_DIR}
   
   [[ "x${DO_CLEAN}" = "x1" ]] &&  make -f ../Makefile.sdk UBOOT_DEFCONFIG=${SOC_BASE}_defconfig DEVICE_TREE=${CUSTOM_DTS_NAME} DEPLOYDIR=${FIP_DEPLOYDIR_ROOT}/u-boot clean
+  [[ "x${DO_CLEAN}" = "x1" ]] &&  rm -rf ../deploy
   [[ "x${DO_CLEAN_DTB}" = "x1" ]] && rm -f ../build/stm32mp25_defconfig/arch/arm/dts/.stm32mp2* ../build/${SOC_BASE}_defconfig/arch/arm/dts/*dtb 
   [[ "x${DO_NOT_BUILD}" = "x1" ]] && cd - && return 0
   
@@ -211,12 +212,13 @@ function do_build_fip() {
   export FWDDR_DIR
   cd ${UBOOT_DIR}
   
-  make -f ../Makefile.sdk FIP_DEPLOYDIR_ROOT=${FIP_DEPLOYDIR_ROOT} UBOOT_CONFIG=${SOC_BASE}_defconfig \
+  make -f ../Makefile.sdk FIP_DEPLOYDIR_ROOT=${FIP_DEPLOYDIR_ROOT} UBOOT_CONFIG=${OPTEE_TYPE}-programmer-${PRG_BUS} \
 			  UBOOT_DEFCONFIG=${SOC_BASE}_defconfig DEVICE_TREE=${CUSTOM_DTS_NAME} \
 			  FIP_CONFIG=${OPTEE_TYPE}-programmer-${PRG_BUS} fip
+
   for storage in ${STORAGE_DEVICEs}; do
     device="${OPTEE_TYPE}-${storage}"
-    make -f ../Makefile.sdk FIP_DEPLOYDIR_ROOT=${FIP_DEPLOYDIR_ROOT} UBOOT_CONFIG=${SOC_BASE}_defconfig \
+    make -f ../Makefile.sdk FIP_DEPLOYDIR_ROOT=${FIP_DEPLOYDIR_ROOT} UBOOT_CONFIG=${device} \
 			    UBOOT_DEFCONFIG=${SOC_BASE}_defconfig DEVICE_TREE=${CUSTOM_DTS_NAME} \
 			    FIP_CONFIG=${device} fip
   done  
