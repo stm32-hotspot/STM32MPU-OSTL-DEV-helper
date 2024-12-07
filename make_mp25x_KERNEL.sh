@@ -8,7 +8,8 @@ source ${SDK_BUILD_ENV_PATH}
 SOC_BASE="stm32mp25"
 SOC="${SOC_BASE}7f"
 # CUSTOM_DTS_NAME="${SOC}-ev1"
-CUSTOM_DTS_NAME="${SOC}-dk"
+# CUSTOM_DTS_NAME="${SOC}-dk"
+CUSTOM_DTS_NAME="${SOC}-myboard"
 
 MINIMAL_DEFCONFIG="0"
 
@@ -18,7 +19,9 @@ R1="-r1"
 linux_ver="6.6.48"
 devicetree_ver="6.0"
 
-EXTDT_DIR=${PWD}/external-dt-${devicetree_ver}${R0}/external-dt-${devicetree_ver}
+# EXTDT_DIR=${PWD}/external-dt-${devicetree_ver}${R0}/external-dt-${devicetree_ver}
+EXTDT_DIR=${PWD}/STM32MPU-OSTL-DEV-helper/CUSTOM_EXT_DTS
+
 LINUX_DIR="linux-stm32mp-${linux_ver}-stm32mp${R1}${R0}"
 SDK_HELPER_OUT_KERNEL="BUILD_OUTPUT/kernel/"
 mkdir -p ${SDK_HELPER_OUT_KERNEL}

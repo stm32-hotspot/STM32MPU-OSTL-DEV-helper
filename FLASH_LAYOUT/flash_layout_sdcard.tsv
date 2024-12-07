@@ -11,5 +11,5 @@ PED	0x09	fip-b		FIP		mmc0	0x00504400	fip/fip.bin
 PED	0x0A	u-boot-env	ENV		mmc1	0x00904400	none
 PE	0x10	bootfs		System		mmc1	0x00984400	none
 PE	0x11	vendorfs	FileSystem	mmc1	0x04984400	none
-PE	0x12	rootfs		FileSystem	mmc1	0x14984400	none
+PE	0x12	rootfs		FileSystem	mmc1	0x14384400	none
 PE	0x13	userfs		FileSystem	mmc1	0x114384400	none
