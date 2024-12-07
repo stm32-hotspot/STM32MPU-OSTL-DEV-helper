@@ -12,6 +12,16 @@
 ##############################################################################################################
 ##############################################################################################################
 
+#####################################################
+###                                          ########
+###    OPTIONAL CUSTOM CONFIGURATION         ########
+###                                          ########
+#####################################################
+### EXTERNAL DEVICETREE. If defined the standard EXT_DT will be ignored!! ###
+CUSTOM_EXTDT_DIR="STM32MPU-OSTL-DEV-helper/CUSTOM_EXT_DTS"
+### CUSTOM u-boot configs file ######################
+CUSTOM_UBOOT_DEFCONFIG="STM32MPU-OSTL-DEV-helper/CUSTOM_CONFIG_FILES/stm32mp25_defconfig_u-boot"
+
 ##############################################################################################################
 ###                                                                                                 ##########
 ###          MANDATORY DEFINITIONs                                                                  ##########
@@ -21,8 +31,8 @@
 SOC_BASE="stm32mp25"
 SOC="${SOC_BASE}7f"
 
-###########################################################################
 ### DTS name (external dts, can be a custom name) ###
+STD_DT="${SOC}-dk" # Do not change this default value, please.
 # CUSTOM_DTS_NAME="${SOC}-ev1"
 ## ST board DTS names
 # CUSTOM_DTS_NAME="${SOC}-ev1"
@@ -30,12 +40,13 @@ SOC="${SOC_BASE}7f"
 ## External DTS example name
 # CUSTOM_DTS_NAME="${SOC}-ev1-ca35tdcid-ostl""
 
-CUSTOM_DTS_NAME="${SOC}-dk"
+# CUSTOM_DTS_NAME="${SOC}-dk"
+CUSTOM_DTS_NAME="${SOC}-myboard"
 
 ###########################################################################
-# Build FIP and TF-A for this STORAGE_DEVICEs 
-# available STORAGE_DEVICEs = "emmc sdcard nor"
-STORAGE_DEVICEs="emmc"
+# Build FIP and TF-A for this BOOT_DEVICE 
+# available BOOT_DEVICE: "emmc" "sdcard" "nor"
+BOOT_DEVICE="emmc"
 
 ###########################################################################
 # OPTEE version: standard or min
@@ -99,8 +110,17 @@ NUM_COREs=8
 
 cd ${SOURCES_BASE_PATH}
 CURDIR=`pwd`
-EXTDT_DIR=${CURDIR}/external-dt-${DEVICETREE_VER}${R0}/external-dt-${DEVICETREE_VER}
-FWDDR_DIR=${CURDIR}/stm32mp-ddr-phy-${DDR_VER}${R0}/stm32mp-ddr-phy-${DDR_VER}
+
+if [ -z "${CUSTOM_EXTDT_DIR}" ]; then
+   EXTDT_DIR="${CURDIR}/external-dt-${DEVICETREE_VER}${R0}/external-dt-${DEVICETREE_VER}"
+ else
+   for d in tf-a optee u-boot; do
+     [[ ! -d "${CUSTOM_EXTDT_DIR}/${d}" ]] && echo -e "\n\tError: folder ${CUSTOM_EXTDT_DIR}/${d} does not exist, please correct the path\n\n" && exit 0
+   done
+   EXTDT_DIR="${CURDIR}/${CUSTOM_EXTDT_DIR}"
+fi
+
+FWDDR_DIR="${CURDIR}/stm32mp-ddr-phy-${DDR_VER}${R0}/stm32mp-ddr-phy-${DDR_VER}"
 
 SDK_HELPER_OUTPUT="BUILD_OUTPUT"
 SDK_HELPER_OUTPUT_FIP="${SDK_HELPER_OUTPUT}/fip"
@@ -128,7 +148,7 @@ if [[ "x${DO_CLEAN_ALL}" = "x1" ]]; then
   rm -rf ${FIP_DEPLOYDIR_ROOT}
 fi
 
-for storage in ${STORAGE_DEVICEs}; do
+for storage in ${BOOT_DEVICE}; do
     FIP_CONFIGs="${FIP_CONFIGs} ${OPTEE_TYPE}-${storage}"
 done
 FIP_CONFIGs="${FIP_CONFIGs} ${OPTEE_TYPE}-programmer-${PRG_BUS}"
@@ -145,13 +165,27 @@ function do_build_uboot() {
   mkdir -p ${FIP_DEPLOYDIR_ROOT}/u-boot
   
   cd ${UBOOT_DIR}
+
+  UBOOT_DEFCONFIG="${SOC_BASE}_defconfig"
+  if [ ! -z "${CUSTOM_UBOOT_DEFCONFIG}" ]; then
+     if [ -f "../../${CUSTOM_UBOOT_DEFCONFIG}" ]; then
+        cp -v ../../${CUSTOM_UBOOT_DEFCONFIG} configs/${SOC_BASE}_custom_defconfig
+        UBOOT_DEFCONFIG="${SOC_BASE}_custom_defconfig"
+     fi
+  fi
   
-  [[ "x${DO_CLEAN}" = "x1" ]] &&  make -f ../Makefile.sdk UBOOT_DEFCONFIG=${SOC_BASE}_defconfig DEVICE_TREE=${CUSTOM_DTS_NAME} DEPLOYDIR=${FIP_DEPLOYDIR_ROOT}/u-boot clean
+  [[ "x${DO_CLEAN}" = "x1" ]] &&  make -f ../Makefile.sdk UBOOT_DEFCONFIG=${UBOOT_DEFCONFIG} DEVICE_TREE=${CUSTOM_DTS_NAME} DEPLOYDIR=${FIP_DEPLOYDIR_ROOT}/u-boot clean
   [[ "x${DO_CLEAN}" = "x1" ]] &&  rm -rf ../deploy
-  [[ "x${DO_CLEAN_DTB}" = "x1" ]] && rm -f ../build/stm32mp25_defconfig/arch/arm/dts/.stm32mp2* ../build/${SOC_BASE}_defconfig/arch/arm/dts/*dtb 
+  [[ "x${DO_CLEAN_DTB}" = "x1" ]] && rm -f ../build/${UBOOT_DEFCONFIG}/arch/arm/dts/.${SOC_BASE}* \
+					   ../build/${UBOOT_DEFCONFIG}/arch/arm/dts/*dtb \
+					   ${EXTDT_DIR}/u-boot/*dtb ${EXTDT_DIR}/u-boot/.${SOC_BASE}*
   [[ "x${DO_NOT_BUILD}" = "x1" ]] && cd - && return 0
   
-  make -f ../Makefile.sdk UBOOT_CONFIG=${SOC_BASE}_defconfig UBOOT_DEFCONFIG=${SOC_BASE}_defconfig DEVICE_TREE=${CUSTOM_DTS_NAME} DEPLOYDIR=${FIP_DEPLOYDIR_ROOT}/u-boot uboot
+  for dt in ${STD_DT} ${CUSTOM_DTS_NAME}; do
+     make -f ../Makefile.sdk UBOOT_CONFIG=${BOOT_DEVICE} DEVICE_TREE=${dt} \
+			     UBOOT_DEFCONFIG=${UBOOT_DEFCONFIG} UBOOT_BINARY=u-boot.dtb \
+			     DEPLOYDIR=${FIP_DEPLOYDIR_ROOT}/u-boot uboot
+  done
 
   cd -
 }
@@ -162,17 +196,18 @@ function do_build_optee() {
   rm -rf   ${FIP_DEPLOYDIR_ROOT}/optee ${FIP_DEPLOYDIR_ROOT}/fip-${CUSTOM_DTS_NAME}-*.bin
   mkdir -p ${FIP_DEPLOYDIR_ROOT}/optee
 
-  OPTEE_EXTRA_OEMAKE_OPTs="-j${NUM_COREs} PLATFORM=stm32mp2 CROSS_COMPILE_core=aarch64-ostl-linux- CROSS_COMPILE_ta_arm64=aarch64-ostl-linux- \
-			  ARCH=arm CFG_ARM64_core=y NOWERROR=1 LDFLAGS= CFG_EXT_DTS=${EXTDT_DIR}/optee \
-			  CFG_TEE_CORE_LOG_LEVEL=2 CFG_TEE_CORE_DEBUG=y CFG_SCMI_SCPFW=y"
-  
   cd ${OPTEE_DIR}
 
   [[ "x${DO_CLEAN}" = "x1" ]] && make -f ../Makefile.sdk CFG_EMBED_DTB_SOURCE_FILE=${CUSTOM_DTS_NAME} DEPLOYDIR=${FIP_DEPLOYDIR_ROOT}/optee clean
   [[ "x${DO_CLEAN_DTB}" = "x1" ]] && rm -f ../build/${CUSTOM_DTS_NAME}/core/arch/arm/dts/.stm32mp2* out/arm-plat-stm32mp2/core/arch/arm/dts/stm32mp2*
   [[ "x${DO_NOT_BUILD}" = "x1" ]] && cd - && return 0
+
+  OPTEE_EXTRA_OEMAKE_OPTs="-j${NUM_COREs} PLATFORM=stm32mp2 CROSS_COMPILE_core=aarch64-ostl-linux- \
+			  CROSS_COMPILE_ta_arm64=aarch64-ostl-linux- ARCH=arm CFG_ARM64_core=y NOWERROR=1 \
+			  LDFLAGS= CFG_EXT_DTS=${EXTDT_DIR}/optee CFG_TEE_CORE_LOG_LEVEL=2 \
+			  CFG_TEE_CORE_DEBUG=y CFG_SCMI_SCPFW=y"
  
-  make -f ../Makefile.sdk CFG_EMBED_DTB_SOURCE_FILE=${CUSTOM_DTS_NAME} DEPLOYDIR=${FIP_DEPLOYDIR_ROOT}/optee EXTRA_OEMAKE="${OPTEE_EXTRA_OEMAKE_OPTs}" optee
+  make -f ../Makefile.sdk CFG_EMBED_DTB_SOURCE_FILE=${CUSTOM_DTS_NAME} DEPLOYDIR=${FIP_DEPLOYDIR_ROOT}/optee OPTEE_CONFIG=${OPTEE_TYPE} EXTRA_OEMAKE="${OPTEE_EXTRA_OEMAKE_OPTs}" optee
 
   cd -
 }
@@ -187,7 +222,7 @@ function do_build_tfa() {
  
   TFA_COMMON_OPTs="ELF_DEBUG_ENABLE=1 DEPLOYDIR=${FIP_DEPLOYDIR_ROOT}/arm-trusted-firmware"
   TFA_EXTRA_OEMAKE_OPTs="-j${NUM_COREs} PLAT=stm32mp2 ARCH=aarch64 ARM_ARCH_MAJOR=8 CROSS_COMPILE=aarch64-ostl-linux- \
-			DEBUG=0 LOG_LEVEL=40"
+			DEBUG=0 LOG_LEVEL=40 TFA_EXTERNAL_DT=${EXTDT_DIR}/tf-a"
 
   for tfa_target in ${FIP_CONFIGs}; do
    
@@ -212,15 +247,12 @@ function do_build_fip() {
   export FWDDR_DIR
   cd ${UBOOT_DIR}
   
-  make -f ../Makefile.sdk FIP_DEPLOYDIR_ROOT=${FIP_DEPLOYDIR_ROOT} UBOOT_CONFIG=${OPTEE_TYPE}-programmer-${PRG_BUS} \
-			  UBOOT_DEFCONFIG=${SOC_BASE}_defconfig DEVICE_TREE=${CUSTOM_DTS_NAME} \
-			  FIP_CONFIG=${OPTEE_TYPE}-programmer-${PRG_BUS} fip
-
-  for storage in ${STORAGE_DEVICEs}; do
+  for storage in programmer-${PRG_BUS} ${BOOT_DEVICE}; do
     device="${OPTEE_TYPE}-${storage}"
-    make -f ../Makefile.sdk FIP_DEPLOYDIR_ROOT=${FIP_DEPLOYDIR_ROOT} UBOOT_CONFIG=${device} \
-			    UBOOT_DEFCONFIG=${SOC_BASE}_defconfig DEVICE_TREE=${CUSTOM_DTS_NAME} \
-			    FIP_CONFIG=${device} fip
+
+     make -f ../Makefile.sdk UBOOT_CONFIG=${device} FIP_CONFIG=${device} UBOOT_BINARY=u-boot.dtb \
+			     FIP_DEPLOYDIR_ROOT=${FIP_DEPLOYDIR_ROOT} DEVICE_TREE=${CUSTOM_DTS_NAME} \
+			     UBOOT_DEFCONFIG=${UBOOT_DEFCONFIG} fip
   done  
 
   cd -
@@ -240,16 +272,23 @@ mkdir -p ${SDK_HELPER_OUTPUT_TFA}
 
 cp -v ${FIP_DEPLOYDIR_ROOT}/arm-trusted-firmware/metadata.bin 	 ${SDK_HELPER_OUTPUT_TFA}/metadata.bin
 
-for storage in ${STORAGE_DEVICEs}; do
+SRC_FILENAME="${CUSTOM_DTS_NAME}-${OPTEE_TYPE}-${BOOT_DEVICE}"
+SRC_FILENAME_DDR="${CUSTOM_DTS_NAME}-ddr-${OPTEE_TYPE}-${BOOT_DEVICE}"
+DST_FILENAME="${BOOT_DEVICE}"
 
-	cp -v ${FIP_DEPLOYDIR_ROOT}/arm-trusted-firmware/tf-a-${CUSTOM_DTS_NAME}-${OPTEE_TYPE}-${storage}.stm32 ${SDK_HELPER_OUTPUT_TFA}/tfa_${storage}.stm32
-	cp -v ${FIP_DEPLOYDIR_ROOT}/fip/fip-${CUSTOM_DTS_NAME}-ddr-${OPTEE_TYPE}-${storage}.bin ${SDK_HELPER_OUTPUT_FIP}/fip-ddr.bin
-	cp -v ${FIP_DEPLOYDIR_ROOT}/fip/fip-${CUSTOM_DTS_NAME}-${OPTEE_TYPE}-${storage}.bin ${SDK_HELPER_OUTPUT_FIP}/fip.bin
-done
-cp -v ${FIP_DEPLOYDIR_ROOT}/arm-trusted-firmware/tf-a-${CUSTOM_DTS_NAME}-${OPTEE_TYPE}-programmer-${PRG_BUS}.stm32 ${SDK_HELPER_OUTPUT_TFA}/tfa_${PRG_BUS}.stm32
-cp -v ${FIP_DEPLOYDIR_ROOT}/fip/fip-${CUSTOM_DTS_NAME}-${OPTEE_TYPE}-programmer-${PRG_BUS}.bin ${SDK_HELPER_OUTPUT_FIP}/fip_${PRG_BUS}.bin
+cp -v ${FIP_DEPLOYDIR_ROOT}/arm-trusted-firmware/tf-a-${SRC_FILENAME}.stm32 \
+      ${SDK_HELPER_OUTPUT_TFA}/tfa_${DST_FILENAME}.stm32
+cp -v ${FIP_DEPLOYDIR_ROOT}/fip/fip-${SRC_FILENAME}.bin     ${SDK_HELPER_OUTPUT_FIP}/fip.bin
+cp -v ${FIP_DEPLOYDIR_ROOT}/fip/fip-${SRC_FILENAME_DDR}.bin ${SDK_HELPER_OUTPUT_FIP}/fip-ddr.bin
 
-cp -rv STM32MPU-OSTL-DEV-helper/FLASH_LAYOUT        ${SDK_HELPER_OUTPUT}/
+PRG_SRC_FILENAME="${CUSTOM_DTS_NAME}-${OPTEE_TYPE}-programmer-${PRG_BUS}"
+PRG_DST_FILENAME="${PRG_BUS}"
+
+cp -v ${FIP_DEPLOYDIR_ROOT}/arm-trusted-firmware/tf-a-${PRG_SRC_FILENAME}.stm32 \
+      ${SDK_HELPER_OUTPUT_TFA}/tfa_${PRG_DST_FILENAME}.stm32
+cp -v ${FIP_DEPLOYDIR_ROOT}/fip/fip-${PRG_SRC_FILENAME}.bin ${SDK_HELPER_OUTPUT_FIP}/fip_${PRG_DST_FILENAME}.bin
+
+cp -rv STM32MPU-OSTL-DEV-helper/FLASH_LAYOUT   ${SDK_HELPER_OUTPUT}/
 mv ${SDK_HELPER_OUTPUT}/FLASH_LAYOUT/flash.sh  ${SDK_HELPER_OUTPUT}/
 mv ${SDK_HELPER_OUTPUT}/FLASH_LAYOUT/flash.bat ${SDK_HELPER_OUTPUT}/
 
