@@ -17,10 +17,10 @@
 ###    OPTIONAL CUSTOM CONFIGURATION         ########
 ###                                          ########
 #####################################################
-### EXTERNAL DEVICETREE. If defined the standard EXT_DT will be ignored!! ###
-CUSTOM_EXTDT_DIR="STM32MPU-OSTL-DEV-helper/CUSTOM_EXT_DTS"
+### EXTERNAL DEVICETREE. If defined a customized EXTERNAL DEVICE TREE folder will be used  ###
+# CUSTOM_EXTDT_DIR="STM32MPU-OSTL-DEV-helper/CUSTOM_EXT_DTS"
 ### CUSTOM u-boot configs file ######################
-CUSTOM_UBOOT_DEFCONFIG="STM32MPU-OSTL-DEV-helper/CUSTOM_CONFIG_FILES/stm32mp25_defconfig_u-boot"
+# CUSTOM_UBOOT_DEFCONFIG="STM32MPU-OSTL-DEV-helper/UBOOT/stm32mp25_defconfig_u-boot"
 
 ##############################################################################################################
 ###                                                                                                 ##########
@@ -33,15 +33,14 @@ SOC="${SOC_BASE}7f"
 
 ### DTS name (external dts, can be a custom name) ###
 STD_DT="${SOC}-dk" # Do not change this default value, please.
-# CUSTOM_DTS_NAME="${SOC}-ev1"
 ## ST board DTS names
-# CUSTOM_DTS_NAME="${SOC}-ev1"
-# CUSTOM_DTS_NAME="${SOC}-dk"
+# CUSTOM_DTS_NAME="${SOC}-ev1" # Eval board
+# CUSTOM_DTS_NAME="${SOC}-dk"  # Disco board
 ## External DTS example name
-# CUSTOM_DTS_NAME="${SOC}-ev1-ca35tdcid-ostl""
+# CUSTOM_DTS_NAME="${SOC}-ev1-ca35tdcid-ostl" Disco board with core A35 Trusted Domain
 
-# CUSTOM_DTS_NAME="${SOC}-dk"
-CUSTOM_DTS_NAME="${SOC}-myboard"
+# CUSTOM_DTS_NAME="${SOC}-myboard" # Associate this with CUSTOM_EXTDT_DIR
+CUSTOM_DTS_NAME="${SOC}-dk"
 
 ###########################################################################
 # Build FIP and TF-A for this BOOT_DEVICE 
