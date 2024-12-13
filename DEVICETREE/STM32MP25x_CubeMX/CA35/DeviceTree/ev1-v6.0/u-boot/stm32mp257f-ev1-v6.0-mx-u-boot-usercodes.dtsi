@@ -1,0 +1,27 @@
+/{
+	aliases {
+		// mmc0/1 used in flash layout file
+		// matching to bootfs/mmc?_extlinux/
+		mmc0 = &sdmmc1;  // µSD card
+		mmc1 = &sdmmc2;  // eMMC
+	};
+	config {
+		u-boot,mmc-env-partition = "u-boot-env";
+	};
+	fwu-mdata {
+		compatible = "u-boot,fwu-mdata-gpt";
+		fwu-mdata-store = <&sdmmc2>;
+	};
+};
+
+&dwc3 {
+	dr_mode = "peripheral";  // force it to device mode
+};
+
+&usart2 {
+	bootph-all;  // pre-relocation: used for message before relocation
+};
+
+&usart2_pins_mx {
+	bootph-all;
+};

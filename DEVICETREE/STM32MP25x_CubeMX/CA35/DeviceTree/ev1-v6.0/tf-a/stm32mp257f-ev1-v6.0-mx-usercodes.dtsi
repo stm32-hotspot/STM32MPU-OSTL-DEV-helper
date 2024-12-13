@@ -1,0 +1,129 @@
+
+/ {
+	aliases {
+		serial0 = &usart2;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	shadow-prov {
+		compatible = "st,provisioning";
+		hconf1_prov {
+			/* VDDIO2/1 HSLV allowed */
+			/* IWDG4/3/2/1 freeze in Stop/Stanby mode */
+			nvmem-cells = <&hconf1_otp>;
+			st,shadow-value = <0x00018DB6>;
+		};
+	};
+};
+
+&bsec {
+	board_id: board_id@3d8 {
+		reg = <0x3d8 0x4>;
+	};
+};
+
+&ddr {
+	vdd-supply = <&vdd_ddr>;
+	vtt-supply = <&vtt_ddr>;
+	vpp-supply = <&vpp_ddr>;
+	vref-supply = <&vref_ddr>;
+};
+
+&iwdg1 {
+	timeout-sec = <32>;
+};
+
+&pwr {
+	vddio: vddio {
+		vdd-supply = <&vddio_pmic>;
+	};
+	vddio2: vddio2 {
+		vddio2-supply = <&v1v8>;
+	};
+};
+
+&sdmmc2 {
+	non-removable;
+	no-sd;
+	no-sdio;
+	st,neg-edge;
+	bus-width = <8>;
+	vmmc-supply = <&vdd_emmc>;
+	vqmmc-supply = <&vddio2>;
+};
+
+&i2c7 {
+	clock-frequency = <400000>;
+
+	pmic2: stpmic@33 {
+		compatible = "st,stpmic2";
+		reg = <0x33>;
+		status = "okay";
+
+		regulators {
+			compatible = "st,stpmic2-regulators";
+
+			vddcpu: buck1 {
+				regulator-name = "vddcpu";
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <910000>;
+				regulator-always-on;
+			};
+			vddcore: buck2 {
+				regulator-name = "vddcore";
+				regulator-min-microvolt = <820000>;
+				regulator-max-microvolt = <820000>;
+				regulator-always-on;
+			};
+			vddio_pmic: buck4 {
+				regulator-name = "vddio_pmic";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+			};
+			v1v8: buck5 {
+				regulator-name = "v1v8";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+			};
+			vdd_ddr: buck6 {
+				regulator-name = "vdd_ddr";
+				regulator-min-microvolt = <1200000>;
+				regulator-max-microvolt = <1200000>;
+			};
+			vref_ddr: refddr {
+				regulator-name = "vref_ddr";
+			};
+			vdda1v8_aon: ldo1 {
+				regulator-name = "vdda1v8_aon";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+			};
+			vdd_emmc: ldo2 {
+				regulator-name = "vdd_emmc";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-always-on;
+			};
+			vtt_ddr: ldo3 {
+				regulator-name = "vtt_ddr";
+				st,regulator-sink-source;
+			};
+			vdd3v3_usb: ldo4 {
+				regulator-name = "vdd3v3_usb";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-always-on;
+			};
+			vpp_ddr: ldo5 {
+				regulator-name = "vpp_ddr";
+				regulator-min-microvolt = <2500000>;
+				regulator-max-microvolt = <2500000>;
+				regulator-enable-ramp-delay = <1000>;
+			};
+		};
+	};
+};

@@ -1,0 +1,227 @@
+
+#include <dt-bindings/mfd/st,stpmic2.h>
+#include "stm32mp25-pinctrl.dtsi"
+
+/ {
+	aliases {
+		serial0 = &usart2;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	shadow-prov {
+		compatible = "st,provisioning";
+		hconf1_prov {
+			/* VDDIO2/1 HSLV (High Speed at Low Voltage) allowed */
+			/* IWDG4/3/2/1 freeze in Stop/Stanby mode */
+			nvmem-cells = <&hconf1_otp>;
+			st,shadow-value = <0x00018DB6>;
+		};
+	};
+};
+
+&cpu0 {
+	cpu-supply = <&vddcpu>;
+};
+
+&iwdg1 {
+	timeout-sec = <32>;
+	status = "okay";
+};
+
+&pwr {
+	wakeup-gpios = <&gpioa 0 GPIO_ACTIVE_LOW>, <0>, <0>, <0>, <0>, <0>;
+	status = "okay";
+
+	/* the following internal regulators are shared to scmi client */
+	vddio1: vddio1 {
+		status = "okay";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <3300000>;
+		vddio1-supply = <&vddio_sdcard>;
+	};
+	vddio2: vddio2 {
+		status = "okay";
+		vddio2-supply = <&v1v8>;
+		regulator-always-on;
+	};
+	vddio3: vddio3 {
+		status = "okay";
+		vddio3-supply = <&vddio_pmic>;
+	};
+	vddio4: vddio4 {
+		status = "okay";
+		vddio4-supply = <&vddio_pmic>;
+	};
+	vddio: vddio {
+		status = "okay";
+		vdd-supply = <&vddio_pmic>;
+	};
+	vdd33ucpd: vdd33ucpd {
+		status = "okay";
+		vdd33ucpd-supply = <&vdd3v3_usb>;
+	};
+	vdda18adc: vdda18adc {
+		status = "okay";
+		vdda18adc-supply = <&v1v8>;
+	};
+	vddgpu: vddgpu {
+		status = "okay";
+		vddgpu-supply = <&vddgpu_pmic>;
+	};
+};
+
+/* 1500MHz is only for STM32MP25xF */
+&pll1 {
+	pll1_cfg_1500Mhz: pll1-cfg-1500Mhz {
+		cfg = <375 5 1 2>;
+		src = <MUX_CFG(MUX_MUXSEL5, MUXSEL_HSE)>;
+	};
+};
+&rcc {
+	st,clk_opp {
+		st,ck_cpu1 {
+			cfg_1 {
+				hz = <1500000000>;
+				st,pll = <&pll1_cfg_1500Mhz>;
+			};
+			cfg_2 {
+				hz = <1200000000>;
+				st,pll = <&pll1_cfg_1200Mhz>;
+			};
+		};
+	};
+};
+
+&risaf1 {
+		status = "okay";
+};
+&risaf4 {
+		status = "okay";
+};
+&risaf5 {
+		status = "okay";
+};
+
+&scmi_regu {
+	scmi_vdd_emmc: voltd-vdd-emmc {
+		reg = <VOLTD_SCMI_STPMIC2_LDO2>;
+		voltd-supply = <&vdd_emmc>;
+	};
+	scmi_vdd3v3_usb: voltd-vdd3v3-usb {
+		reg = <VOLTD_SCMI_STPMIC2_LDO4>;
+		voltd-supply = <&vdd3v3_usb>;
+	};
+};
+
+&usart2 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&usart2_pins_a>;
+		status = "okay";
+};
+
+
+&i2c7 {
+	clock-frequency = <400000>;
+
+	pmic2: stpmic2@33 {
+		compatible = "st,stpmic2";
+		reg = <0x33>;
+		st,pmic-it-id = <IT_PKEY_FA IT_PKEY_RI>;
+		st,notif-it-id = <0 1>;
+		st,wakeup-pin-number = <1>;
+		wakeup-parent = <&pwr>;
+		status = "okay";
+
+		regulators {
+			compatible = "st,stpmic2-regulators";
+
+			ldo1-supply = <&vddio_pmic>;
+
+			vddcpu: buck1 {
+				regulator-name = "vddcpu";
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <910000>;
+				regulator-always-on;
+			};
+			vddcore: buck2 {
+				regulator-name = "vddcore";
+				regulator-min-microvolt = <820000>;
+				regulator-max-microvolt = <820000>;
+				regulator-always-on;
+			};
+			vddgpu_pmic: buck3 {
+				regulator-name = "vddgpu_pmic";
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <900000>;
+				regulator-over-current-protection;
+			};
+			vddio_pmic: buck4 {
+				regulator-name = "vddio_pmic";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-always-on;
+			};
+			v1v8: buck5 {
+				regulator-name = "v1v8";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+			};
+			vdd_ddr: buck6 {
+				regulator-name = "vdd_ddr";
+				regulator-min-microvolt = <1200000>;
+				regulator-max-microvolt = <1200000>;
+				regulator-always-on;
+				regulator-pull-down;
+			};
+			v3v3: buck7 {
+				regulator-name = "v3v3";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-always-on;
+				regulator-over-current-protection;
+			};
+			vdda1v8_aon: ldo1 {
+				regulator-name = "vdda1v8_aon";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+			};
+			vdd_emmc: ldo2 {
+				regulator-name = "vdd_emmc";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-over-current-protection;
+			};
+			vtt_ddr: ldo3 {
+				regulator-name = "vtt_ddr";
+				regulator-always-on;
+			};
+			vdd3v3_usb: ldo4 {
+				regulator-name = "vdd3v3_usb";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-always-on;
+				regulator-over-current-protection;
+			};
+			vpp_ddr: ldo5 {
+				regulator-name = "vpp_ddr";
+				regulator-min-microvolt = <2500000>;
+				regulator-max-microvolt = <2500000>;
+				regulator-always-on;
+			};
+			vddio_sdcard: ldo8 {
+				regulator-name = "vddio_sdcard";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <3300000>;
+			};
+			vref_ddr: refddr {
+				regulator-name = "vref_ddr";
+				regulator-always-on;
+			};
+		};
+	};
+};
