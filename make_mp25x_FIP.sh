@@ -166,7 +166,7 @@ if [[ "x${DO_CLEAN_ALL}" = "x1" ]]; then
   rm -rf ${FIP_DEPLOYDIR_ROOT}
 fi
 
-FIP_CONFIGs="${OPTEE_TYPE}-${storage} ${OPTEE_TYPE}-programmer-${PRG_BUS}"
+FIP_CONFIGs="${OPTEE_TYPE}-${BOOT_DEVICE} ${OPTEE_TYPE}-programmer-${PRG_BUS}"
 
 # Toolchain setup
 source ${SDK_BUILD_ENV_PATH}
