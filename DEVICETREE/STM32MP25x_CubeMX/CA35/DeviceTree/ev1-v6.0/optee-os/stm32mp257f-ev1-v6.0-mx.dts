@@ -1,0 +1,135 @@
+// SPDX-License-Identifier: (GPL-2.0-or-later OR BSD-3-Clause)
+/*
+ * Copyright (C) 2024, STMicroelectronics - All Rights Reserved
+ * Author: STM32CubeMX code generation for STMicroelectronics.
+ */
+
+/* For more information on Device Tree configuration, please refer to
+ * https://wiki.st.com/stm32mpu/wiki/Category:Device_tree_configuration
+ */
+
+/dts-v1/;
+
+#include <dt-bindings/pinctrl/stm32-pinfunc.h>
+#include <dt-bindings/clock/stm32mp25-clksrc.h>
+#include <dt-bindings/soc/stm32mp25-rif.h>
+#include <dt-bindings/soc/stm32mp25-risab.h>
+#include <dt-bindings/soc/stm32mp25-risaf.h>
+#include <dt-bindings/soc/stm32mp25-rifsc.h>
+#include "stm32mp257.dtsi"
+#include "stm32mp25xf.dtsi"
+#include "stm32mp257f-ev1-v6.0-mx-rcc.dtsi"
+#include "stm32mp257f-ev1-v6.0-mx-resmem.dtsi"
+#include "stm32mp257f-ev1-v6.0-mx-rif.dtsi"
+#include "stm32mp25xxai-pinctrl.dtsi"
+
+/* USER CODE BEGIN includes */
+/* USER CODE END includes */
+
+/ {
+	model = "STMicroelectronics custom STM32CubeMX board - openstlinux-6.6-yocto-scarthgap-mpu-v24.11.06";
+	compatible = "st,stm32mp257f-ev1-v6.0-mx", "st,stm32mp257";
+
+	memory@80000000 {
+		device_type = "memory";
+		reg = <0x0 0x80000000 0x00000001 0x00000000>;
+
+		/* USER CODE BEGIN memory */
+		/* USER CODE END memory */
+	};
+
+	/* USER CODE BEGIN root */
+	/* USER CODE END root */
+
+}; /*root*/
+
+&pinctrl {
+	i2c7_pins_mx: i2c7_mx-0 {
+		pins {
+			pinmux = <STM32_PINMUX('D', 14, AF10)>, /* I2C7_SDA */
+					 <STM32_PINMUX('D', 15, AF10)>; /* I2C7_SCL */
+			bias-disable;
+			drive-open-drain;
+			slew-rate = <0>;
+		};
+	};
+
+	pwr_pins_mx: pwr_mx-0 {
+		pins {
+			pinmux = <STM32_PINMUX('A', 0, ANALOG)>; /* PWR_WKUP1 */
+		};
+	};
+
+	/* USER CODE BEGIN pinctrl */
+	/* USER CODE END pinctrl */
+};
+
+&pinctrl_z {
+	/* USER CODE BEGIN pinctrl_z */
+	/* USER CODE END pinctrl_z */
+};
+
+&hpdma2 {
+	status = "okay";
+
+	/* USER CODE BEGIN hpdma2 */
+	/* USER CODE END hpdma2 */
+};
+
+&hpdma3 {
+	status = "okay";
+
+	/* USER CODE BEGIN hpdma3 */
+	/* USER CODE END hpdma3 */
+};
+
+&i2c7 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c7_pins_mx>;
+	status = "okay";
+
+	/* USER CODE BEGIN i2c7 */
+	/* USER CODE END i2c7 */
+};
+
+&ipcc1 {
+	status = "okay";
+
+	/* USER CODE BEGIN ipcc1 */
+	/* USER CODE END ipcc1 */
+};
+
+&m33_rproc {
+	status = "okay";
+
+	/* USER CODE BEGIN m33_rproc */
+	/* USER CODE END m33_rproc */
+};
+
+&pwr {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pwr_pins_mx>;
+	status = "okay";
+
+	/* USER CODE BEGIN pwr */
+	/* USER CODE END pwr */
+};
+
+&rcc {
+	status = "okay";
+
+	/* USER CODE BEGIN rcc */
+	/* USER CODE END rcc */
+};
+
+&rtc {
+	status = "okay";
+
+	/* USER CODE BEGIN rtc */
+	/* USER CODE END rtc */
+};
+
+/* USER CODE BEGIN addons */
+#include "stm32mp257f-ev1-v6.0-mx-usercodes.dtsi"
+/* USER CODE END addons */
+

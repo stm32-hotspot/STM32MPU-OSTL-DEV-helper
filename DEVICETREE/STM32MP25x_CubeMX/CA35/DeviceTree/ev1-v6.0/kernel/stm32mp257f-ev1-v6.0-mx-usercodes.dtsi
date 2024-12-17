@@ -1,0 +1,94 @@
+
+#include "../optee/stm32mp257f-ev1-v6.0-mx-resmem.dtsi"
+/ {
+	reserved-memory{
+
+		/delete-node/ ipc-shmem-1@81200000 ;
+
+		ipc_shmem_1: ipc-shmem-1@81200000 {
+			compatible = "shared-dma-pool";
+			reg = <0x0 0x81200000 0x0 0xf8000>;
+			no-map;
+		};
+
+		vdev0vring0: vdev0vring0@812f8000 {
+			compatible = "shared-dma-pool";
+			reg = <0x0 0x812f8000 0x0 0x1000>;
+			no-map;
+		};
+
+		vdev0vring1: vdev0vring1@812f9000 {
+			compatible = "shared-dma-pool";
+			reg = <0x0 0x812f9000 0x0 0x1000>;
+			no-map;
+		};
+
+		vdev0buffer: vdev0buffer@812fa000 {
+			compatible = "shared-dma-pool";
+			reg = <0x0 0x812fa000 0x0 0x6000>;
+			no-map;
+		};
+
+		/delete-node/ linuxkernel1@84000000 ;
+		/delete-node/ linuxkernel2@100000000 ;
+	};
+};
+
+/{
+	aliases {
+		serial0 = &usart2;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+};
+
+&a35ss_syscfg {
+	status = "okay";
+};
+
+&arm_wdt {
+	timeout-sec = <32>;
+	status = "okay";
+};
+
+&m33_rproc {
+	mboxes = <&ipcc1 0x100>, <&ipcc1 0x101>, <&ipcc1 2>, <&ipcc1 3>;
+	mbox-names = "vq0", "vq1", "shutdown", "detach";
+	memory-region = <&cm33_cube_fw>, <&cm33_cube_data>,
+			<&ipc_shmem_1>, <&vdev0vring0>,
+			<&vdev0vring1>, <&vdev0buffer>,
+			<&cm33_sram2>;
+	st,syscfg-nsvtor = <&a35ss_syscfg 0xa8 0xffffff80>;
+};
+
+&scmi_regu {
+	scmi_vdd_emmc: regulator@18 {
+		reg = <VOLTD_SCMI_STPMIC2_LDO2>;
+		regulator-name = "vdd_emmc";
+	};
+	scmi_vdd3v3_usb: regulator@20 {
+		reg = <VOLTD_SCMI_STPMIC2_LDO4>;
+		regulator-name = "vdd3v3_usb";
+	};
+};
+
+&sdmmc2 {
+	non-removable;
+	no-sd;
+	no-sdio;
+	st,neg-edge;
+	bus-width = <8>;
+	vmmc-supply = <&scmi_vdd_emmc>;
+	vqmmc-supply = <&scmi_vddio2>;
+};
+
+&usb2_phy2{
+	vdd33-supply = <&scmi_vdd3v3_usb>;
+};
+
+&dwc3 {
+	maximum-speed = "high-speed";
+	usb-role-switch;
+};

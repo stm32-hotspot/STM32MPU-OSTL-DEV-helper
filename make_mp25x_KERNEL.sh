@@ -9,7 +9,8 @@ SOC_BASE="stm32mp25"
 SOC="${SOC_BASE}7f"
 # CUSTOM_DTS_NAME="${SOC}-ev1"
 # CUSTOM_DTS_NAME="${SOC}-dk"
-CUSTOM_DTS_NAME="${SOC}-myboard"
+# CUSTOM_DTS_NAME="${SOC}-myboard"
+CUSTOM_DTS_NAME="${SOC}-ev1-v6.0-mx"
 
 MINIMAL_DEFCONFIG="0"
 
@@ -19,16 +20,16 @@ R1="-r1"
 linux_ver="6.6.48"
 devicetree_ver="6.0"
 
-# EXTDT_DIR=${PWD}/external-dt-${devicetree_ver}${R0}/external-dt-${devicetree_ver}
-EXTDT_DIR=${PWD}/STM32MPU-OSTL-DEV-helper/CUSTOM_EXT_DTS
+# EXTDT_DIR="${PWD}/external-dt-${devicetree_ver}${R0}/external-dt-${devicetree_ver}"
+# EXTDT_DIR="${PWD}/STM32MPU-OSTL-DEV-helper/DEVICETREE/CUSTOM_EXT_DTS_FOR_DK"
+EXTDT_DIR="${PWD}/STM32MPU-OSTL-DEV-helper/DEVICETREE/CUSTOM_EXT_DTS_MINIMAL_FOR_EV"
 
 LINUX_DIR="linux-stm32mp-${linux_ver}-stm32mp${R1}${R0}"
 SDK_HELPER_OUT_KERNEL="BUILD_OUTPUT/kernel/"
-mkdir -p ${SDK_HELPER_OUT_KERNEL}
+KERNEL_CONFIG_DIR="../../STM32MPU-OSTL-DEV-helper/TEMPLATES/STM32MP2/CONFIGS/KERNEL"
+DEBUG_FILE='> kernel_config.log 2>&1'
 
-# echo ${EXTDT_DIR}
-# echo ${LINUX_DIR}
-# exit 0
+mkdir -p ${SDK_HELPER_OUT_KERNEL}
 
 FRAGMENT_LIST="fragment-03-systemd.config \
 	       fragment-04-modules.config"
@@ -38,24 +39,25 @@ cd ${LINUX_DIR}/linux-${linux_ver}
 export K_BUILD_DIR="../build/"
 mkdir -p ${K_BUILD_DIR}
 
-make O=${K_BUILD_DIR} defconfig fragment*.config
+make O=${K_BUILD_DIR} defconfig fragment*.config ${DEBUG_FILE}
 
 if [ "x${MINIMAL_DEFCONFIG}" = "x0" ]; then
   echo
 #  for frag in ${FRAGMENT_LIST}; do
-#    ./scripts/kconfig/merge_config.sh -m -r -O ${K_BUILD_DIR} ${K_BUILD_DIR}/.config ../${frag}
+#    ./scripts/kconfig/merge_config.sh -m -r -O ${K_BUILD_DIR} ${K_BUILD_DIR}/.config ../${frag} ${DEBUG_FILE}
 #  done
 else
-   ./scripts/kconfig/merge_config.sh -m -r -O ${K_BUILD_DIR} ${K_BUILD_DIR}/.config ../../STM32MPU-OSTL-DEV-helper/KERNEL/fragment_minimal.config
+   ./scripts/kconfig/merge_config.sh -m -r -O ${K_BUILD_DIR} ${K_BUILD_DIR}/.config \
+          ${KERNEL_CONFIG_DIR}/fragment_minimal.config >> kernel_config.log 2>&1
 fi
 
-# ./scripts/diffconfig -m  ${K_BUILD_DIR}.config ${K_BUILD_DIR}defconfig_202411292314 > FFFFF_AA
+# ./scripts/diffconfig -m  ${K_BUILD_DIR}.config ${K_BUILD_DIR}defconfig_202411292314 ${DEBUG_FILE}
 # exit 0
 
-# ./scripts/diffconfig -m ${K_BUILD_DIR}defconfig ../../STM32MPU_SDK_helper/KERNEL/minimal_defconfig > ../../STM32MPU_SDK_helper/KERNEL/fragment_minimal.config
+# ./scripts/diffconfig -m ${K_BUILD_DIR}defconfig ${KERNEL_CONFIG_DIR}/minimal_defconfig > ${KERNEL_CONFIG_DIR}/fragment_minimal.config
 # exit 0
 
-# cp ../../STM32MPU_SDK_helper/KERNEL/minimal_defconfig arch/arm64/configs/stm32mp2_minimal_defconfig
+# cp ${KERNEL_CONFIG_DIR}/minimal_defconfig arch/arm64/configs/stm32mp2_minimal_defconfig
 # make O=${K_BUILD_DIR} stm32mp2_minimal_defconfig
 
 # make O=${K_BUILD_DIR} menuconfig
@@ -64,6 +66,7 @@ fi
 # exit 0
 
 make O=${K_BUILD_DIR} KBUILD_EXTDTS="${EXTDT_DIR}/linux" st/${CUSTOM_DTS_NAME}.dtb
+
 make O=${K_BUILD_DIR} -j8 Image.gz
 make O=${K_BUILD_DIR} -j8 modules
 make O=${K_BUILD_DIR} INSTALL_MOD_PATH="../../${SDK_HELPER_OUT_KERNEL}" modules_install
