@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+export PATH=$PATH:/opt/st/STM32Prog/bin/
+
 STORAGE="emmc"
 # STORAGE="sdcard"
 
