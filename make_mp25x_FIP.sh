@@ -155,7 +155,10 @@ FIP_DEPLOYDIR_ROOT="${CURDIR}/FIP_artifacts"
 ##############################################################################################################
 
 if [[ ! -z "${USE_CUBEMX_PRJ_DIR}" ]]; then
-  if [[ -d "${USE_CUBEMX_PRJ_DIR}" ]]; then
+  if [[ -d "${USE_CUBEMX_PRJ_DIR}/CA35/DeviceTree/" ]]; then
+     [[ ! -z "${CUBEMX_PRJ_NAME}" ]] && CUSTOM_DTS_NAME="${SOC}-${CUBEMX_PRJ_NAME}-mx"
+     CUBEMX_PRJ_DIR="${CURDIR}/${USE_CUBEMX_PRJ_DIR}/CA35/DeviceTree/${CUBEMX_PRJ_NAME}"
+  elif [[ -d "${USE_CUBEMX_PRJ_DIR}" ]]; then
      [[ ! -z "${CUBEMX_PRJ_NAME}" ]] && CUSTOM_DTS_NAME="${SOC}-${CUBEMX_PRJ_NAME}-mx"
      CUBEMX_PRJ_DIR="${CURDIR}/${USE_CUBEMX_PRJ_DIR}/${CUBEMX_PRJ_NAME}"
   fi
@@ -212,7 +215,7 @@ function do_manage_cubemx_prj() {
        # DTSNAME=`basename ${dtsfile} | sed -e 's/\.dts$//g'`
        MKFILE="Makefile"
        [[ "${folder}" == "optee-os" ]] && MKFILE="conf.mk"
-       sed -e "s/SDKHELPERTEMPLATE/${CUSTOM_DTS_NAME}/g" ${TEMPLATE_DIR}/${folder}/${MKFILE} > ${CUBEMX_PRJ_DIR}/${folder}/${MKFILE}
+       sed -e "s/SDKHELPERTEMPLATE/${CUSTOM_DTS_NAME}/g" ${TEMPLATE_DIR}/${folder}/${MKFILE} > ${CUSTOM_EXTDT_DIR}/${folder}/${MKFILE}
      done
   done
 }
@@ -228,8 +231,8 @@ function do_build_uboot() {
   UBOOT_DEFCONFIG="${SOC_BASE}_defconfig"
   if [ ! -z "${CUSTOM_UBOOT_DEFCONFIG}" ]; then
      if [ -f "../../${CUSTOM_UBOOT_DEFCONFIG}" ]; then
-        cp -v ../../${CUSTOM_UBOOT_DEFCONFIG} configs/${SOC_BASE}_custom_defconfig
-        UBOOT_DEFCONFIG="${SOC_BASE}_custom_defconfig"
+	cp -v ../../${CUSTOM_UBOOT_DEFCONFIG} configs/${SOC_BASE}_custom_defconfig
+	UBOOT_DEFCONFIG="${SOC_BASE}_custom_defconfig"
      fi
   fi
   
@@ -318,9 +321,9 @@ function do_build_fip() {
 }
 
 [[ ! -z "${USE_CUBEMX_PRJ_DIR}" ]] && do_manage_cubemx_prj
-[[ ! -z "${BUILD_UBOOT}" ]] && do_build_uboot
-[[ ! -z "${BUILD_OPTEE}" ]] && do_build_optee
-[[ ! -z "${BUILD_TFA}"   ]] && do_build_tfa 
+[[ "x${BUILD_UBOOT}" == "x1" ]] && do_build_uboot
+[[ "x${BUILD_OPTEE}" == "x1" ]] && do_build_optee
+[[   "x${BUILD_TFA}" == "x1" ]] && do_build_tfa 
 do_build_fip # Assemble FIP file
 
 echo; echo; echo
@@ -350,6 +353,7 @@ cp -v ${FIP_DEPLOYDIR_ROOT}/fip/fip-${PRG_SRC_FILENAME}.bin ${SDK_HELPER_OUTPUT_
 
 cp -rv STM32MPU-OSTL-DEV-helper/FLASH_LAYOUT   ${SDK_HELPER_OUTPUT}/
 mv ${SDK_HELPER_OUTPUT}/FLASH_LAYOUT/flash.sh  ${SDK_HELPER_OUTPUT}/
+chmod 755 ${SDK_HELPER_OUTPUT}/flash.sh
 mv ${SDK_HELPER_OUTPUT}/FLASH_LAYOUT/flash.bat ${SDK_HELPER_OUTPUT}/
 
 
