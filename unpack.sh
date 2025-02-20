@@ -1,26 +1,54 @@
 #!/bin/bash -e
 
 
-gcnano_ver="6.4.19"
-linux_ver="6.6.48"
-optee_ver="4.0.0"
-tfa_ver="v2.10.5"
-ddr_ver="A2022.11"
-uboot_ver="v2023.10"
-devicetree_ver="6.0"
+for component in external-dt stm32mp-ddr-phy; do
+    [[ "x`ls -1d ${component}-* 2>/dev/null`" == "x" ]] && continue
+    component_ver=`ls -1d ${component}-* | sed -e "s/${component}-\(.*\)/\1/g"`
 
-R0="-r0"
-R1="-r1"
-R2="-r2"
-RC8="-rc8"
+    case ${component} in
+	"external-dt")
+		devicetree_dir="${component}-${component_ver}"
+		;;
+	"stm32mp-ddr-phy")
+		ddrphy_dir="${component}-${component_ver}"
+		;;
+    esac
+done
 
-devicetree_dir="external-dt-${devicetree_ver}"
-gcnano_dir="gcnano-driver-stm32mp-${gcnano_ver}-stm32mp2${R1}${RC8}"
-linux_dir="linux-stm32mp-${linux_ver}-stm32mp${R1}"
-optee_dir="optee-os-stm32mp-${optee_ver}-stm32mp${R1}"
-tfa_dir="tf-a-stm32mp-${tfa_ver}-stm32mp${R1}"
-uboot_dir="u-boot-stm32mp-${uboot_ver}-stm32mp${R1}"
-ddr_dir="stm32mp-ddr-phy-${ddr_ver}"
+for component in gcnano-driver linux optee-os tf-a u-boot; do
+    [[ "x`ls -1d ${component}-stm32mp-*-stm32mp*-r*-r* 2>/dev/null`" == "x" ]] && continue
+
+       component_ver=`ls -1d ${component}-stm32mp-*-stm32mp*-r*-r* | sed -e "s/${component}-stm32mp-\(.*\)-stm32mp-r\(.*\)-r\(.*\)/\1/g"`
+    component_ver_Ra=`ls -1d ${component}-stm32mp-*-stm32mp*-r*-r* | sed -e "s/${component}-stm32mp-\(.*\)-stm32mp-r\(.*\)-r\(.*\)/\2/g"`
+    component_ver_Rb=`ls -1d ${component}-stm32mp-*-stm32mp*-r*-r* | sed -e "s/${component}-stm32mp-\(.*\)-stm32mp-r\(.*\)-r\(.*\)/\3/g"`
+
+    case ${component} in
+	"gcnano-driver")
+		   gcnano_ver=`ls -1d ${component}-stm32mp-*-stm32mp*-r*-r* | sed -e "s/${component}-stm32mp-\(.*\)-stm32mp\(.*\)-r\(.*\)-r\(.*\)/\1/g"`
+  		    gcnano_mp=`ls -1d ${component}-stm32mp-*-stm32mp*-r*-r* | sed -e "s/${component}-stm32mp-\(.*\)-stm32mp\(.*\)-r\(.*\)-r\(.*\)/\2/g"`
+  		gcnano_ver_Ra=`ls -1d ${component}-stm32mp-*-stm32mp*-r*-r* | sed -e "s/${component}-stm32mp-\(.*\)-stm32mp\(.*\)-r\(.*\)-r\(.*\)/\3/g"`
+  		gcnano_ver_Rb=`ls -1d ${component}-stm32mp-*-stm32mp*-r*-r* | sed -e "s/${component}-stm32mp-\(.*\)-stm32mp\(.*\)-r\(.*\)-r\(.*\)/\4/g"`
+		gcnano_dir="${component}-stm32mp-${gcnano_ver}-stm32mp${gcnano_mp}-r${gcnano_ver_Ra}"
+		;;
+	"linux")
+		linux_ver=${component_ver}
+	  	linux_ver_Rb=${component_ver_Rb}
+		linux_dir="${component}-stm32mp-${component_ver}-stm32mp-r${component_ver_Ra}"
+		;;
+	"tf-a")
+	  	tfa_ver_Rb=${component_ver_Rb}
+		tfa_dir="${component}-stm32mp-${component_ver}-stm32mp-r${component_ver_Ra}"
+		;;
+	"optee-os")
+	  	optee_ver_Rb=${component_ver_Rb}
+		optee_dir="${component}-stm32mp-${component_ver}-stm32mp-r${component_ver_Ra}"
+		;;
+	"u-boot")
+	  	uboot_ver_Rb=${component_ver_Rb}
+		uboot_dir="${component}-stm32mp-${component_ver}-stm32mp-r${component_ver_Ra}"
+		;;
+    esac
+done
 
 DO_CLEAN="1"
 TRACK_ON_GIT="0"
@@ -29,26 +57,27 @@ dry_run=""
 # dry_run="--dry-run"
 
 if [ "x${DO_CLEAN}" == "x1" ]; then
-   rm -rf "${tfa_dir}${R0}/${tfa_dir}"
-   rm -rf "${optee_dir}${R0}/${optee_dir}"
-   rm -rf "${uboot_dir}${R0}/${uboot_dir}"
-   rm -rf "${linux_dir}${R0}/linux-${linux_ver}"
+   rm -rf "${tfa_dir}-r${tfa_ver_Rb}/${tfa_dir}"
+   rm -rf "${optee_dir}-r${optee_ver_Rb}/${optee_dir}"
+   rm -rf "${uboot_dir}-r${uboot_ver_Rb}/${uboot_dir}"
+   rm -rf "${linux_dir}-r${linux_ver_Rb}/linux-${linux_ver}"
 fi
 
-folders_list="${devicetree_dir} ${gcnano_dir} ${linux_dir} ${optee_dir} ${tfa_dir} ${uboot_dir} ${ddr_dir}"
+folders_list="${devicetree_dir} ${gcnano_dir} ${linux_dir} ${optee_dir} ${tfa_dir} ${uboot_dir} ${ddrphy_dir}"
 
 for folder in ${folders_list}; do
-	cd ${folder}${R0}
+	[[ ! -d ${folder}-r${component_ver_Rb} ]] && continue
+	cd ${folder}-r${component_ver_Rb}
 	echo "Processing folder: ${folder}"
 	echo -n "     Unpacking ..."
-	archivename=${folder}${R0}
+	archivename=${folder}-r${component_ver_Rb}
 
-	[[ "x${archivename}" == "x${linux_dir}${R0}" ]] && archivename="linux-${linux_ver}"
+	[[ "x${archivename}" == "x${linux_dir}-r${linux_ver_Rb}" ]] && archivename="linux-${linux_ver}"
 	tar xJf ${archivename}.tar.xz
 
-	[[ "x${archivename}" == "x${tfa_dir}${R0}" ]] 	&& archivename=${folder}
-	[[ "x${archivename}" == "x${optee_dir}${R0}" ]] && archivename=${folder}
-	[[ "x${archivename}" == "x${uboot_dir}${R0}" ]] && archivename=${folder}
+	[[ "x${archivename}" == "x${tfa_dir}-r${tfa_ver_Rb}"     ]] && archivename=${folder}
+	[[ "x${archivename}" == "x${optee_dir}-r${optee_ver_Rb}" ]] && archivename=${folder}
+	[[ "x${archivename}" == "x${uboot_dir}-r${uboot_ver_Rb}" ]] && archivename=${folder}
 	
 	echo -n " Patching  ..."
 	if [ `ls *patch 2>/dev/null | wc -l` -gt 0 ]; then
