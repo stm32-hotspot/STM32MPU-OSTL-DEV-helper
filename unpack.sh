@@ -3,13 +3,16 @@
 
 for component in external-dt stm32mp-ddr-phy; do
     [[ "x`ls -1d ${component}-* 2>/dev/null`" == "x" ]] && continue
-    component_ver=`ls -1d ${component}-* | sed -e "s/${component}-\(.*\)/\1/g"`
+    component_ver=`ls -1d ${component}-* | sed -e "s/${component}-\(.*\)-r\(.*\)/\1/g"`
+    component_ver_Rb=`ls -1d ${component}-*-r* | sed -e "s/${component}-\(.*\)-r\(.*\)/\2/g"`
 
     case ${component} in
 	"external-dt")
+	  	devicetree_ver_Rb=${component_ver_Rb}
 		devicetree_dir="${component}-${component_ver}"
 		;;
 	"stm32mp-ddr-phy")
+	  	ddrphy_ver_Rb=${component_ver_Rb}
 		ddrphy_dir="${component}-${component_ver}"
 		;;
     esac
