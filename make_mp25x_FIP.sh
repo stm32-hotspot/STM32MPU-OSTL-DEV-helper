@@ -230,7 +230,6 @@ function do_manage_cubemx_prj() {
      done
   done
 
-  touch /tmp/FIP_SCRIPT_done.txt
 }
 
 function do_build_uboot() {
@@ -334,6 +333,7 @@ function do_build_fip() {
 }
 
 [[ ! -z "${USE_CUBEMX_PRJ_DIR}" ]] && do_manage_cubemx_prj
+touch /tmp/FIP_SCRIPT_done.txt
 [[ "x${BUILD_UBOOT}" == "x1" ]] && do_build_uboot
 [[ "x${BUILD_OPTEE}" == "x1" ]] && do_build_optee
 [[   "x${BUILD_TFA}" == "x1" ]] && do_build_tfa 

@@ -14,27 +14,6 @@ CUSTOM_DTS_NAME="${SOC}-ev1-v6.0-mx"
 
 MINIMAL_DEFCONFIG="0"
 
-for component in linux external-dt; do
-    if [ "x`ls -1d ${component}-* 2>/dev/null | grep -v stm32mp`" != "x" ]; then
-          component_ver=`ls -1d ${component}-*-r* | sed -e "s/${component}-\(.*\)-r\(.*\)/\1/g"`
-       component_ver_Ra=`ls -1d ${component}-*-r* | sed -e "s/${component}-\(.*\)-r\(.*\)/\2/g"`
-       component_ver_Rb=""
-       EXTERNAL_DT_DIR="${component}-${component_ver}-r${component_ver_Ra}/${component}-${component_ver}"
-    fi
-
-    [[ "x`ls -1d ${component}-stm32mp-*-stm32mp*-r*-r* 2>/dev/null`" == "x" ]] && continue
-
-       component_ver=`ls -1d ${component}-stm32mp-*-stm32mp*-r*-r* | sed -e "s/${component}-stm32mp-\(.*\)-stm32mp-r\(.*\)-r\(.*\)/\1/g"`
-    component_ver_Ra=`ls -1d ${component}-stm32mp-*-stm32mp*-r*-r* | sed -e "s/${component}-stm32mp-\(.*\)-stm32mp-r\(.*\)-r\(.*\)/\2/g"`
-    component_ver_Rb=`ls -1d ${component}-stm32mp-*-stm32mp*-r*-r* | sed -e "s/${component}-stm32mp-\(.*\)-stm32mp-r\(.*\)-r\(.*\)/\3/g"`
-
-    case ${component} in
-	"linux")
-	  	tfa_ver_Rb=${component_ver_Rb}
-		LINUX_DIR="${component}-stm32mp-${component_ver}-stm32mp-r${component_ver_Ra}-r${component_ver_Rb}/${component}-${component_ver}"
-		;;
-    esac
-done
 
 # EXTDT_WORKING_DIR="${PWD}/${EXTERNAL_DT_DIR}"
 # EXTDT_WORKING_DIR="${PWD}/STM32MPU-OSTL-DEV-helper/DEVICETREE/CUSTOM_EXT_DTS_FOR_DK"
@@ -58,6 +37,28 @@ if [ ! -f "/tmp/FIP_SCRIPT_done.txt" ]; then
    echo ""
    exit 0
 fi
+
+for component in linux external-dt; do
+    if [ "x`ls -1d ${component}-* 2>/dev/null | grep -v stm32mp`" != "x" ]; then
+          component_ver=`ls -1d ${component}-*-r* | sed -e "s/${component}-\(.*\)-r\(.*\)/\1/g"`
+       component_ver_Ra=`ls -1d ${component}-*-r* | sed -e "s/${component}-\(.*\)-r\(.*\)/\2/g"`
+       component_ver_Rb=""
+       EXTERNAL_DT_DIR="${component}-${component_ver}-r${component_ver_Ra}/${component}-${component_ver}"
+    fi
+
+    [[ "x`ls -1d ${component}-stm32mp-*-stm32mp*-r*-r* 2>/dev/null`" == "x" ]] && continue
+
+       component_ver=`ls -1d ${component}-stm32mp-*-stm32mp*-r*-r* | sed -e "s/${component}-stm32mp-\(.*\)-stm32mp-r\(.*\)-r\(.*\)/\1/g"`
+    component_ver_Ra=`ls -1d ${component}-stm32mp-*-stm32mp*-r*-r* | sed -e "s/${component}-stm32mp-\(.*\)-stm32mp-r\(.*\)-r\(.*\)/\2/g"`
+    component_ver_Rb=`ls -1d ${component}-stm32mp-*-stm32mp*-r*-r* | sed -e "s/${component}-stm32mp-\(.*\)-stm32mp-r\(.*\)-r\(.*\)/\3/g"`
+
+    case ${component} in
+	"linux")
+	  	tfa_ver_Rb=${component_ver_Rb}
+		LINUX_DIR="${component}-stm32mp-${component_ver}-stm32mp-r${component_ver_Ra}-r${component_ver_Rb}/${component}-${component_ver}"
+		;;
+    esac
+done
 
 mkdir -p ${SDK_HELPER_OUT_KERNEL}
 
