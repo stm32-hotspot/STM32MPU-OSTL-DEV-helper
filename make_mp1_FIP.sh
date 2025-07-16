@@ -236,7 +236,7 @@ function do_build_uboot() {
   
   for dt in ${CUSTOM_DTS_NAME}; do
      make -f ../Makefile.sdk.${STM32MP_PLATFORM} DEVICE_TREE=${dt} UBOOT_CONFIG=default UBOOT_DEFCONFIG=${UBOOT_DEFCONFIG} UBOOT_DEVICETREE_EXTERNAL=${dt} \
-			     			 DEPLOYDIR=${FIP_DEPLOYDIR_ROOT}/u-boot uboot
+			     			 EXTDT_DIR_UBOOT=u-boot DEPLOYDIR=${FIP_DEPLOYDIR_ROOT}/u-boot uboot
   done
 
   cd -
@@ -260,7 +260,8 @@ function do_build_optee() {
 			  		  CFG_EXT_DTS=${EXTDT_DIR}/optee LDFLAGS= CFG_TEE_CORE_LOG_LEVEL=2 \
 			  		  CFG_TEE_CORE_DEBUG=n CFG_${SOC_BASE}=y"
  
-  make -f ../Makefile.sdk.${STM32MP_PLATFORM} CFG_EMBED_DTB_SOURCE_FILE=${CUSTOM_DTS_NAME} DEPLOYDIR=${FIP_DEPLOYDIR_ROOT}/optee OPTEE_CONFIG=${OPTEE_TYPE} EXTRA_OEMAKE="${OPTEE_EXTRA_OEMAKE_OPTs}" optee
+  make -f ../Makefile.sdk.${STM32MP_PLATFORM} CFG_EMBED_DTB_SOURCE_FILE=${CUSTOM_DTS_NAME} DEPLOYDIR=${FIP_DEPLOYDIR_ROOT}/optee  \
+					      EXTDT_DIR_OPTEE=optee EXTDT_DIR_OPTEE_SERIAL=optee OPTEE_CONFIG=${OPTEE_TYPE} EXTRA_OEMAKE="${OPTEE_EXTRA_OEMAKE_OPTs}" optee
 
   cd -
 }
@@ -271,7 +272,7 @@ function do_build_tfa() {
 
   cd ${TFA_DIR}
  
-  TFA_COMMON_OPTs="ELF_DEBUG_ENABLE=1 DEPLOYDIR=${FIP_DEPLOYDIR_ROOT}/arm-trusted-firmware"
+  TFA_COMMON_OPTs="ELF_DEBUG_ENABLE=1 EXTDT_DIR_TF_A=tf-a EXTDT_DIR_TF_A_SERIAL=tf-a DEPLOYDIR=${FIP_DEPLOYDIR_ROOT}/arm-trusted-firmware"
   TFA_EXTRA_OEMAKE_OPTs="-j${NUM_COREs} PLAT=${STM32MP_PLATFORM} ARCH=aarch32 ARM_ARCH_MAJOR=7 CROSS_COMPILE=arm-ostl-linux-gnueabi- \
 					DEBUG=0 LOG_LEVEL=40 AARCH32_SP=optee \
 					TFA_EXTERNAL_DT=${EXTDT_DIR}/tf-a"
