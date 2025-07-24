@@ -1,15 +1,16 @@
 #!/bin/bash -e
 
+STM32MP_PLATFORM="stm32mp2"
 export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
-export ARCH=arm64
-SDK_BUILD_ENV_PATH="/opt/st/stm32mp2/5.0.8-openstlinux-6.6-yocto-scarthgap-mpu-v25.06.11/environment-setup-cortexa35-ostl-linux"
+SDK_BUILD_ENV_BASE="/opt/st/${STM32MP_PLATFORM}/5.0.8-openstlinux-6.6-yocto-scarthgap-mpu-v25.06.11"
+SDK_BUILD_ENV_PATH="${SDK_BUILD_ENV_BASE}/environment-setup-cortexa35-ostl-linux"
 source ${SDK_BUILD_ENV_PATH}
-
-# SOC_BASE="stm32mp23"
-# SOC="${SOC_BASE}5f"
 
 SOC_BASE="stm32mp25"
 SOC="${SOC_BASE}7f"
+
+# SOC_BASE="stm32mp23"
+# SOC="${SOC_BASE}5f"
 
 # CUSTOM_DTS_NAME="${SOC}-ev1"
 # CUSTOM_DTS_NAME="${SOC}-dk"
@@ -48,6 +49,8 @@ for component in linux external-dt; do
 		;;
     esac
 done
+
+CURDIR=`pwd`
 
 if [ -z "${EXTDT_WORKING_DIR}" ]; then
    EXTDT_DIR="${CURDIR}/${EXTERNAL_DT_DIR}"
@@ -103,8 +106,8 @@ fi
 
 make O=${K_BUILD_DIR} KBUILD_EXTDTS="${EXTDT_WORKING_DIR}/linux" st/${CUSTOM_DTS_NAME}.dtb
 
-make O=${K_BUILD_DIR} -j8 Image.gz
-make O=${K_BUILD_DIR} -j8 modules
+make -j8 O=${K_BUILD_DIR} Image.gz
+make -j8 O=${K_BUILD_DIR} modules
 make O=${K_BUILD_DIR} INSTALL_MOD_PATH="../../${SDK_HELPER_OUT_KERNEL}" modules_install
 
 cd ../../${SDK_HELPER_OUT_KERNEL}/lib
