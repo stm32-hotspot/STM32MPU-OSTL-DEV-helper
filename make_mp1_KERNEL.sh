@@ -24,7 +24,7 @@ SDK_BUILD_ENV_BASE="/opt/st/${STM32MP_PLATFORM}/5.0.8-openstlinux-6.6-yocto-scar
 SDK_BUILD_ENV_PATH="${SDK_BUILD_ENV_BASE}/environment-setup-cortexa7t2hf-neon-vfpv4-ostl-linux-gnueabi"
 source ${SDK_BUILD_ENV_PATH}
 
-EXTDT_WORKING_DIR="STM32MPU-OSTL-DEV-helper/DEVICETREE/CUSTOM_EXT_DTS_FOR_STM32MP135F-DK"
+EXTDT_WORKING_DIR="STM32MPU-OSTL-DEV-helper/DEVICETREE/EXT_DTS_FOR_MY_STM32MP135F-DK"
 
 MINIMAL_DEFCONFIG="0"
 
@@ -83,7 +83,7 @@ fi
 # cp ${KERNEL_CONFIG_DIR}/minimal_defconfig arch/arm/configs/stm32mp1_minimal_defconfig
 # make O=${K_BUILD_DIR} stm32mp1_minimal_defconfig
 
-make O=${K_BUILD_DIR} menuconfig
+# make O=${K_BUILD_DIR} menuconfig
 # make O=${K_BUILD_DIR} savedefconfig
 # cp -v ${K_BUILD_DIR}/defconfig  ${K_BUILD_DIR}/defconfig_`date +%Y%m%d%H%M`
 # exit 0
@@ -97,4 +97,3 @@ make LOADADDR=0xc2000040 O=${K_BUILD_DIR} -j8 uImage
 cp -v ${K_BUILD_DIR}arch/arm/boot/uImage ../../${SDK_HELPER_OUT_KERNEL}
 cp -v ${K_BUILD_DIR}arch/arm/boot/dts/st/${CUSTOM_DTS_NAME}.dtb ../../${SDK_HELPER_OUT_KERNEL}
 rm -f ../../${SDK_HELPER_OUT_KERNEL}/lib/modules/6.6.48/build
-
