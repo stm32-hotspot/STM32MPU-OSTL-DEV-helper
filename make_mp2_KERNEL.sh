@@ -104,7 +104,7 @@ fi
 # cp -v ${K_BUILD_DIR}/defconfig  ${K_BUILD_DIR}/defconfig_`date +%Y%m%d%H%M`
 # exit 0
 
-make O=${K_BUILD_DIR} KBUILD_EXTDTS="${EXTDT_WORKING_DIR}/linux" st/${CUSTOM_DTS_NAME}.dtb
+make O=${K_BUILD_DIR} KBUILD_EXTDTS="${EXTDT_DIR}/linux" st/${CUSTOM_DTS_NAME}.dtb
 
 make -j8 O=${K_BUILD_DIR} Image.gz
 make -j8 O=${K_BUILD_DIR} modules
