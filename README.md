@@ -1,6 +1,26 @@
 # SDK_helper<br />
 OpenSTLinux SDK tools<br />
 ##############################<br /><br />
+
+Starting from OpenSTLinux v6.1 Developer Package SOURCES-stm32mp-openstlinux-6.6-yocto-scarthgap-mpu-v25.06.11.tar.gz includes a tool called: "sdk-infos-1.0".
+This tool is a good alternative to OSTL-DEV-helper, and we suggest using it for your next builds.<br />
+Current release of  "sdk-infos-1.0-r0" contains some bugs; for this reason, in the folder "sdk-infos-1.0-r3" we propose in this git a patched version of this useful tool.<br />
+
+Usage:
+- copy the content of folder sdk-infos-1.0-r3/ to overwrite  sdk-infos-1.0-r0/ files
+   - cp -v STM32MPU-OSTL-DEV-helper/sdk-infos-1.0-r3/* sdk-infos-1.0-r0/
+- enter in sdk-infos-1.0-r0 folder
+   - cd sdk-infos-1.0-r0
+- launch ./generated_build_script-stm32mpx.sh stm32mp2 [or stm32mp2]
+   - ./generated_build_script-stm32mpx.sh stm32mp2
+-  Return to previous folder
+   - cd ../
+- edit the generated file sdk_compilation-stm32mp2-my-custom-board.sh 
+   - vim sdk_compilation-stm32mp2-my-custom-board.sh
+- run the build script:
+   - ./sdk_compilation-stm32mp2-my-custom-board.sh  
+<br />
+
 HELPER SCRIPTs:
    - <b>unpack.sh</b>: Run this script one to unpack tar.xz archives or to cleanup the environment;<br />
    - <b>make_mp1_FIP.sh</b>, <b>make_mp1_KERNEL.sh</b>: Run theese scripts to generate TF-A, FIP and Linux kernel + modules for STM32MP1 boards;<br />
