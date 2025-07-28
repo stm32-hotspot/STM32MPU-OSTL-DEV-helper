@@ -1,11 +1,16 @@
 #!/bin/bash -e
 
 STM32MP_PLATFORM="stm32mp1"
-# MP15
+export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
+SDK_BUILD_ENV_BASE="/opt/st/${STM32MP_PLATFORM}/5.0.8-openstlinux-6.6-yocto-scarthgap-mpu-v25.06.11"
+SDK_BUILD_ENV_PATH="${SDK_BUILD_ENV_BASE}/environment-setup-cortexa7t2hf-neon-vfpv4-ostl-linux-gnueabi"
+source ${SDK_BUILD_ENV_PATH}
+
+# STM32MP15
 # SOC_BASE="stm32mp15"
 # SOC="${SOC_BASE}7c"
 
-# MP13
+# STM32MP13
 SOC_BASE="stm32mp13"
 SOC="${SOC_BASE}5f"
 
@@ -18,47 +23,61 @@ SOC="${SOC_BASE}5f"
 
 CUSTOM_DTS_NAME="${SOC}-myboard"
 
-export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
-SOURCES_BASE_PATH="./"
-SDK_BUILD_ENV_BASE="/opt/st/${STM32MP_PLATFORM}/5.0.8-openstlinux-6.6-yocto-scarthgap-mpu-v25.06.11"
-SDK_BUILD_ENV_PATH="${SDK_BUILD_ENV_BASE}/environment-setup-cortexa7t2hf-neon-vfpv4-ostl-linux-gnueabi"
-source ${SDK_BUILD_ENV_PATH}
-
-EXTDT_WORKING_DIR="STM32MPU-OSTL-DEV-helper/DEVICETREE/CUSTOM_EXT_DTS_FOR_STM32MP135F-DK"
-
 MINIMAL_DEFCONFIG="0"
 
+EXTDT_WORKING_DIR="STM32MPU-OSTL-DEV-helper/DEVICETREE/EXT_DTS_FOR_MY_STM32MP135F-DK"
 SDK_HELPER_OUT_KERNEL="BUILD_OUTPUT/kernel/"
 mkdir -p ${SDK_HELPER_OUT_KERNEL}
-
-LINUX_DIR="linux-stm32mp-6.6.78-stm32mp-r2-r0/linux-6.6.78/"
 
 KERNEL_CONFIG_DIR="../../STM32MPU-OSTL-DEV-helper/TEMPLATES/STM32MP1/CONFIGS/KERNEL"
 DEBUG_FILE='> kernel_config.log 2>&1'
 
-mkdir -p ${SDK_HELPER_OUT_KERNEL}
+for component in linux external-dt; do
+    if [ "x`ls -1d ${component}-* 2>/dev/null | grep -v stm32mp`" != "x" ]; then
+          component_ver=`ls -1d ${component}-*-r* | sed -e "s/${component}-\(.*\)-r\(.*\)/\1/g"`
+       component_ver_Ra=`ls -1d ${component}-*-r* | sed -e "s/${component}-\(.*\)-r\(.*\)/\2/g"`
+       component_ver_Rb=""
+       EXTERNAL_DT_DIR="${component}-${component_ver}-r${component_ver_Ra}/${component}-${component_ver}"
+    fi
 
-FRAGMENT_LIST=" fragment-04-modules.config \
-		fragment-03-systemd.config"
+    [[ "x`ls -1d ${component}-stm32mp-*-stm32mp*-r*-r* 2>/dev/null`" == "x" ]] && continue
 
-cd ${SOURCES_BASE_PATH}
+       component_ver=`ls -1d ${component}-stm32mp-*-stm32mp*-r*-r* | sed -e "s/${component}-stm32mp-\(.*\)-stm32mp-r\(.*\)-r\(.*\)/\1/g"`
+    component_ver_Ra=`ls -1d ${component}-stm32mp-*-stm32mp*-r*-r* | sed -e "s/${component}-stm32mp-\(.*\)-stm32mp-r\(.*\)-r\(.*\)/\2/g"`
+    component_ver_Rb=`ls -1d ${component}-stm32mp-*-stm32mp*-r*-r* | sed -e "s/${component}-stm32mp-\(.*\)-stm32mp-r\(.*\)-r\(.*\)/\3/g"`
+
+    case ${component} in
+	"linux")
+	  	tfa_ver_Rb=${component_ver_Rb}
+		LINUX_DIR="${component}-stm32mp-${component_ver}-stm32mp-r${component_ver_Ra}-r${component_ver_Rb}/${component}-${component_ver}"
+		;;
+    esac
+done
+
 CURDIR=`pwd`
 
 if [ -z "${EXTDT_WORKING_DIR}" ]; then
    EXTDT_DIR="${CURDIR}/${EXTERNAL_DT_DIR}"
  else
-   for d in tf-a optee u-boot; do
-     [[ ! -d "${EXTDT_WORKING_DIR}/${d}" ]] && echo -e "\n\tError: folder ${EXTDT_WORKING_DIR}/${d} does not exist, please correct the path\n\n" && exit 0
-   done
+   [[ ! -e "${EXTDT_WORKING_DIR}" ]] && echo -e "\n\tError: folder \"${EXTDT_WORKING_DIR}\" does not exist, please correct the path\n\n" && exit 0
+   cd "${EXTDT_WORKING_DIR}/"
+   [[ ! -d "linux" ]] && [[ -d "kernel" ]] && ln -s kernel linux
+   [[ ! -e "linux" ]] && echo -e "\n\tError: folder \"${EXTDT_WORKING_DIR}/linux\" does not exist, please correct the path\n\n" && exit 0
+   cd -
    EXTDT_DIR="${CURDIR}/${EXTDT_WORKING_DIR}"
 fi
+
+mkdir -p ${SDK_HELPER_OUT_KERNEL}
+
+FRAGMENT_LIST="fragment-03-systemd.config \
+	       fragment-04-modules.config"
 
 cd ${LINUX_DIR}
 
 export K_BUILD_DIR="../build/"
 mkdir -p ${K_BUILD_DIR}
 
-make O=${K_BUILD_DIR} multi_v7_defconfig fragment-0*.config >> kernel_config.log
+make O=${K_BUILD_DIR} multi_v7_defconfig fragment-0*.config ${DEBUG_FILE}
 
 if [ "x${MINIMAL_DEFCONFIG}" = "x0" ]; then
    echo
@@ -83,18 +102,21 @@ fi
 # cp ${KERNEL_CONFIG_DIR}/minimal_defconfig arch/arm/configs/stm32mp1_minimal_defconfig
 # make O=${K_BUILD_DIR} stm32mp1_minimal_defconfig
 
-make O=${K_BUILD_DIR} menuconfig
+# make O=${K_BUILD_DIR} menuconfig
 # make O=${K_BUILD_DIR} savedefconfig
 # cp -v ${K_BUILD_DIR}/defconfig  ${K_BUILD_DIR}/defconfig_`date +%Y%m%d%H%M`
 # exit 0
 
 make O=${K_BUILD_DIR} KBUILD_EXTDTS="${EXTDT_DIR}/linux" st/${CUSTOM_DTS_NAME}.dtb
 
-make LOADADDR=0xc2000040 O=${K_BUILD_DIR} -j8 uImage
-# make O=${K_BUILD_DIR} -j8 modules
-# make O=${K_BUILD_DIR} INSTALL_MOD_PATH="../../${SDK_HELPER_OUT_KERNEL}" modules_install
+make -j8 LOADADDR=0xc2000040 O=${K_BUILD_DIR} -j8 uImage
+make -j8 O=${K_BUILD_DIR} -j8 modules
+make O=${K_BUILD_DIR} INSTALL_MOD_PATH="../../${SDK_HELPER_OUT_KERNEL}" modules_install
 
-cp -v ${K_BUILD_DIR}arch/arm/boot/uImage ../../${SDK_HELPER_OUT_KERNEL}
+cd ../../${SDK_HELPER_OUT_KERNEL}/lib
+tar czf ../modules.tar.gz modules
+rm -rf modules
+cd -
+cp -v ${K_BUILD_DIR}arch/arm/boot/uImage                        ../../${SDK_HELPER_OUT_KERNEL}
 cp -v ${K_BUILD_DIR}arch/arm/boot/dts/st/${CUSTOM_DTS_NAME}.dtb ../../${SDK_HELPER_OUT_KERNEL}
 rm -f ../../${SDK_HELPER_OUT_KERNEL}/lib/modules/6.6.48/build
-
