@@ -1,8 +1,9 @@
 # SDK_helper<br />
-OpenSTLinux SDK tools<br />
+OpenSTLinux SDK tools for <b>OpenSTLinux v6.1</b><br />
+(File SOURCES-stm32mp-openstlinux-6.6-yocto-scarthgap-mpu-v25.06.11.tar.gz)<br />
 ##############################<br /><br />
 
-Starting from OpenSTLinux v6.1 Developer Package SOURCES-stm32mp-openstlinux-6.6-yocto-scarthgap-mpu-v25.06.11.tar.gz includes a tool called: "sdk-infos-1.0".
+Starting from OpenSTLinux v6.1 Developer Package, the archive file "SOURCES-stm32mp-openstlinux-6.6-yocto-scarthgap-mpu-v25.06.11.tar.gz" includes a tool called: "sdk-infos-1.0".
 This tool is a good alternative to OSTL-DEV-helper, and we suggest using it for your next builds.<br />
 Current release of  "sdk-infos-1.0-r0" contains some bugs; for this reason, in the folder "sdk-infos-1.0-r3" we propose in this git a patched version of this useful tool.<br />
 
